@@ -1,0 +1,79 @@
+﻿@model PremiumPolicy
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<form asp-controller="Home" asp-action="Index" method="post" class="needs-validation" novalidate>
+    @Html.AntiForgeryToken()
+    <div class="form-group">
+        <label for="Name">Name</label>
+        <input type="text" class="form-control" asp-for="Name" maxlength="20" placeholder="Please enter name" required>
+        <div class="invalid-feedback">
+            Please provide Name.
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="Age">Age</label>
+        <input type="number" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="3" min="1" class="form-control" asp-for="Age"  required>
+    </div>
+    <div class="form-group">
+        <label for="DOB">Date of Birth</label>
+        @Html.TextBoxFor(m => m.DOB, "{0:dd/MM/yyyy}", new { @class = "form-control", @required = "required" })
+    </div>
+    <div class="form-group">
+        <label for="Occupation">Occupation</label>
+        @Html.DropDownListFor(m => m.Occupation, Model.OccupationList.Select(x => new SelectListItem() { Text = x.Occupation, Value = x.Rating }), "--Select One--", new { @class = "form-control", @required = "required" })
+    <div class="invalid-feedback">
+        Please select Occupation.
+    </div>
+    </div>
+    <div class="form-group">
+        <label for="DeathSumInsured">Death of Sum Insured</label>
+        <input type="number" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="9" min="1" class="form-control" asp-for="DeathSumInsured" required>
+    </div>
+    <div class="form-group">
+        <label for="DeathPremium">Death Premium</label>
+        <label id="DeathPremium">@Model.DeathPremium</label>
+    </div>
+    <button type="submit" class="btn btn-success">Calculate Death Premium</button>
+</form>
+
+@section scripts{
+    <script>
+        (function () {
+            'use strict';
+            window.addEventListener('load', function () {
+                // Fetch all the forms we want to apply custom Bootstrap validation styles to
+                var forms = document.getElementsByClassName('needs-validation');
+                // Loop over them and prevent submission
+                var validation = Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        $(function () { 
+            $('#DOB').datepicker({
+                format: "dd/mm/yyyy",
+                showStatus: true,
+                showWeeks: true,
+                currentText: 'Now',
+                autoSize: true,
+                gotoCurrent: true,
+                showAnim: 'blind',
+                highlightWeek: true
+            }); 
+        });
+        $('#Occupation').change(function () {
+            $.get("/Home/GetDeathPremium", { deathSumInsured: $("#DeathSumInsured").val(), age: $("#Age").val(), occupation: $(this).val()}, function (data) {
+                $("#DeathPremium").text(data);
+            });
+        });
+    </script>
+}
